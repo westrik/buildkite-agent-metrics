@@ -33,6 +33,7 @@ func main() {
 		backendOpt     = flag.String("backend", "cloudwatch", "Specify the backend to use: cloudwatch, statsd, prometheus, stackdriver")
 		statsdHost     = flag.String("statsd-host", "127.0.0.1:8125", "Specify the StatsD server")
 		statsdTags     = flag.Bool("statsd-tags", false, "Whether your StatsD server supports tagging like Datadog")
+		clusterName    = flag.String("cluster-name", "", "Specify the Buildkite cluster name")
 		prometheusAddr = flag.String("prometheus-addr", ":8080", "Prometheus metrics transport bind address")
 		prometheusPath = flag.String("prometheus-path", "/metrics", "Prometheus metrics transport path")
 		clwRegion      = flag.String("cloudwatch-region", "", "AWS Region to connect to, defaults to $AWS_REGION or us-east-1")
@@ -78,7 +79,7 @@ func main() {
 		}
 		bk = backend.NewCloudWatchBackend(region, dimensions)
 	case "statsd":
-		bk, err = backend.NewStatsDBackend(*statsdHost, *statsdTags)
+		bk, err = backend.NewStatsDBackend(*statsdHost, *statsdTags, *clusterName)
 		if err != nil {
 			fmt.Printf("Error starting StatsD, err: %v\n", err)
 			os.Exit(1)

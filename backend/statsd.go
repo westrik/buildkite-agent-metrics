@@ -9,9 +9,10 @@ import (
 type StatsD struct {
 	client        *statsd.Client
 	tagsSupported bool
+	clusterName   string
 }
 
-func NewStatsDBackend(host string, tagsSupported bool) (*StatsD, error) {
+func NewStatsDBackend(host string, tagsSupported bool, clusterName string) (*StatsD, error) {
 	c, err := statsd.NewBuffered(host, 100)
 	if err != nil {
 		return nil, err
@@ -21,6 +22,7 @@ func NewStatsDBackend(host string, tagsSupported bool) (*StatsD, error) {
 	return &StatsD{
 		client:        c,
 		tagsSupported: tagsSupported,
+		clusterName:   clusterName,
 	}, nil
 }
 
@@ -36,8 +38,12 @@ func (cb *StatsD) Collect(r *collector.Result) error {
 			var finalName string
 			tags := []string{}
 			if cb.tagsSupported {
-				finalName = "queues." + name
-				tags = []string{"queue:" + queue}
+				if cb.clusterName != "" {
+					finalName = "clusters." + cb.clusterName + ".queues." + queue + "." + name
+				} else {
+					finalName = "queues." + name
+				}
+				tags = []string{"queue:" + queue, "bk_cluster_name:" + cb.clusterName}
 			} else {
 				finalName = "queues." + queue + "." + name
 			}
